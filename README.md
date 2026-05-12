@@ -1,11 +1,13 @@
 <div align="center">
 
-# perlin.h - single-header only 3D and 2D perlin noise generator
+# noise.h - single-header only 3D and 2D procedural noise generator
 
 </div>
 
-`perlin.h` is a single-header only library for generating a 3D and 2D perlin noise values.
-It's based on the official implementation of the algorithm, made by Ken Perlin made around ~1982/85.
+`noise.h` is a single-header only library for generating a 3D and 2D procedural noise values.
+
+Library consists of:
+- `perlin.h` - based on the official implementation of the algorithm, made by Ken Perlin made around ~1982/85.
 
 ## Sources
 - https://en.wikipedia.org/wiki/Perlin_noise

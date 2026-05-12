@@ -1,17 +1,20 @@
 # ========
 
+# root directory of the makefile
 MK_ROOT	= $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-MK_NAME	= perlin
+MK_NAME = noise
 
 # ========
 
-MODULES = $(MK_ROOT)perlin.h \
+MODULES = \
+		$(MK_ROOT)noise.h \
+		$(MK_ROOT)perlin.h \
 
 # ========
 
 .PHONY : all
 
-all : install
+all : install 
 
 .PHONY : install
 
@@ -22,6 +25,6 @@ install :
 .PHONY : remove
 
 remove :
-	rm -rf /usr/local/include/$(MK_NAME)
+	rm -fr /usr/local/include/$(MK_NAME)
 
 # ========
