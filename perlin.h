@@ -5,32 +5,29 @@
 #if !defined (_perlin_h_)
 # define _perlin_h_ 1
 #
-# if !defined PERLINAPI
-#  define PERLINAPI extern
-# endif /* PERLINAPI */
-#
 # if defined (__cplusplus)
 
 extern "C" {
 
 # endif /* __cplusplus */
 
-PERLINAPI double perlin2d(double, double);
+double perlin2d(double, double);
 
-PERLINAPI double perlin3d(double, double, double);
+double perlin3d(double, double, double);
 
 # if defined (__cplusplus)
 
 }
 
 # endif /* __cplusplus */
+#endif /* _perlin_h_ */
 #
-# if defined (PERLIN_IMPLEMENTATION)
+#if defined (PERLIN_IMPLEMENTATION)
+# if !defined (_perlin_impl_h_)
+#  define _perlin_impl_h_ 1
 #
 #  include <stddef.h>
 #  include <stdint.h>
-#
-#  include <math.h>
 #
 #  if defined (__cplusplus)
 
@@ -38,8 +35,7 @@ extern "C" {
 
 #  endif /* __cplusplus */
 
-/* */
-static const uint8_t g_perm[512] = {
+static const uint8_t _perlin_perm[512] = {
     151, 160, 137,  91,  90,  15, 131,  13, 201,  95,  96,  53, 194, 233,   7, 225,
     140,  36, 103,  30,  69, 142,   8,  99,  37, 240,  21,  10,  23, 190,   6, 148,
     247, 120, 234,  75,   0,  26, 197,  62,  94, 252, 219, 203, 117,  35,  11,  32,
@@ -75,22 +71,25 @@ static const uint8_t g_perm[512] = {
 };
 
 static inline double __perlin_floor(double a) {
-    int i = (int) a;
-    return ((a < i) ? i - 1 : i);
+    return ((a < (int) a) ? (int) a - 1 :
+                            (int) a);
 }
 
 
-static inline double __perlin_fade(double t) { return (t * t * t * (t * (t * 6.0 - 15.0) + 10.0)); }
+static inline double __perlin_fade(double t) {
+    return (t * t * t * (t * (t * 6.0 - 15.0) + 10.0));
+}
 
 
-static inline double __perlin_lerp(double t, double a, double b) { return (a + t * (b - a)); } 
+static inline double __perlin_lerp(double t, double a, double b) {
+    return (a + t * (b - a));
+} 
 
 
 static inline double __perlin_grad(int hash, double x, double y, double z) {
     int h = hash & 0x0f;
     double u = h < 8 ? x : y,
            v = h < 4 ? y : h == 12 || h == 14 ? x : z;
-
     return (((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v));
 }
 
@@ -116,26 +115,26 @@ static inline double __perlin(double x, double y, double z, int x_wrap, int y_wr
            v = __perlin_fade(y),
            w = __perlin_fade(z);
 
-    uint8_t A = g_perm[X    ] + Y, AA = g_perm[A] + Z, AB = g_perm[A + 1] + Z,
-            B = g_perm[X + 1] + Y, BA = g_perm[B] + Z, BB = g_perm[B + 1] + Z;
+    uint8_t A = _perlin_perm[X    ] + Y, AA = _perlin_perm[A] + Z, AB = _perlin_perm[A + 1] + Z,
+            B = _perlin_perm[X + 1] + Y, BA = _perlin_perm[B] + Z, BB = _perlin_perm[B + 1] + Z;
 
-    return (__perlin_lerp(w, __perlin_lerp(v, __perlin_lerp(u, __perlin_grad(g_perm[AA    ], x      , y      , z      ),
-                                                               __perlin_grad(g_perm[BA    ], x - 1.0, y      , z      )),
-                                              __perlin_lerp(u, __perlin_grad(g_perm[AB    ], x      , y - 1.0, z      ),
-                                                               __perlin_grad(g_perm[BB    ], x - 1.0, y - 1.0, z      ))),
-                             __perlin_lerp(v, __perlin_lerp(u, __perlin_grad(g_perm[AA + 1], x      , y      , z - 1.0),
-                                                               __perlin_grad(g_perm[BA + 1], x - 1.0, y      , z - 1.0)),
-                                              __perlin_lerp(u, __perlin_grad(g_perm[AB + 1], x      , y - 1.0, z - 1.0),
-                                                               __perlin_grad(g_perm[BB + 1], x - 1.0, y - 1.0, z - 1.0)))));
+    return (__perlin_lerp(w, __perlin_lerp(v, __perlin_lerp(u, __perlin_grad(_perlin_perm[AA    ], x      , y      , z      ),
+                                                               __perlin_grad(_perlin_perm[BA    ], x - 1.0, y      , z      )),
+                                              __perlin_lerp(u, __perlin_grad(_perlin_perm[AB    ], x      , y - 1.0, z      ),
+                                                               __perlin_grad(_perlin_perm[BB    ], x - 1.0, y - 1.0, z      ))),
+                             __perlin_lerp(v, __perlin_lerp(u, __perlin_grad(_perlin_perm[AA + 1], x      , y      , z - 1.0),
+                                                               __perlin_grad(_perlin_perm[BA + 1], x - 1.0, y      , z - 1.0)),
+                                              __perlin_lerp(u, __perlin_grad(_perlin_perm[AB + 1], x      , y - 1.0, z - 1.0),
+                                                               __perlin_grad(_perlin_perm[BB + 1], x - 1.0, y - 1.0, z - 1.0)))));
 }
 
 
-PERLINAPI double perlin2d(double x, double y) {
+double perlin2d(double x, double y) {
     return (__perlin(x, y, 0.0, 0, 0, 0));
 }
 
 
-PERLINAPI double perlin3d(double x, double y, double z) {
+double perlin3d(double x, double y, double z) {
     return (__perlin(x, y, z, 0, 0, 0));
 }
 
@@ -146,4 +145,4 @@ PERLINAPI double perlin3d(double x, double y, double z) {
 #  endif /* __cplusplus */
 #
 # endif /* PERLIN_IMPLEMENTATION */
-#endif /* _perlin_h_ */
+#endif /* _perlin_impl_h_ */
