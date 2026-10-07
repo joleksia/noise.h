@@ -11,9 +11,13 @@ extern "C" {
 
 # endif /* __cplusplus */
 
-double perlin2d(double, double);
+double perlin2D(double, double);
 
-double perlin3d(double, double, double);
+double perlin2D_fbm(double, double, double, double, int);
+
+double perlin3D(double, double, double);
+
+double perlin3D_fbm(double, double, double, double, double, int);
 
 # if defined (__cplusplus)
 
@@ -129,13 +133,46 @@ static inline double __perlin(double x, double y, double z, int x_wrap, int y_wr
 }
 
 
-double perlin2d(double x, double y) {
+double perlin2D(double x, double y) {
     return (__perlin(x, y, 0.0, 0, 0, 0));
 }
 
 
-double perlin3d(double x, double y, double z) {
+double perlin2D_fbm(double x, double y, double lacunarity, double persistance, int octaves) {
+    double result = 0.0;
+    double amplitude = 0.5,
+           frequency = 1.0;
+    for (int i = 0; i < octaves; i++) {
+        result += amplitude * __perlin(x * frequency,
+                                       y * frequency,
+                                       0.0, 0, 0, 0);
+        frequency *= lacunarity;
+        amplitude *= persistance;
+    }
+    
+    return (result);
+}
+
+
+double perlin3D(double x, double y, double z) {
     return (__perlin(x, y, z, 0, 0, 0));
+}
+
+
+double perlin3D_fbm(double x, double y, double z, double lacunarity, double persistance, int octaves) {
+    double result = 0.0;
+    double amplitude = 0.5,
+           frequency = 1.0;
+    for (int i = 0; i < octaves; i++) {
+        result += amplitude * __perlin(x * frequency,
+                                       y * frequency,
+                                       z * frequency,
+                                       0, 0, 0);
+        frequency *= lacunarity;
+        amplitude *= persistance;
+    }
+    
+    return (result);
 }
 
 #  if defined (__cplusplus)
