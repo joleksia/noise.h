@@ -11,13 +11,15 @@ extern "C" {
 
 # endif /* __cplusplus */
 
-double perlin2D(double, double);
+/* public API */
 
-double perlin2D_fbm(double, double, double, double, int);
+double perlin2d(double, double);
 
-double perlin3D(double, double, double);
+double perlin3d(double, double, double);
 
-double perlin3D_fbm(double, double, double, double, double, int);
+double fbm2d(double, double, double, double, int);
+
+double fbm3d(double, double, double, double, double, int);
 
 # if defined (__cplusplus)
 
@@ -26,7 +28,7 @@ double perlin3D_fbm(double, double, double, double, double, int);
 # endif /* __cplusplus */
 #endif /* _perlin_h_ */
 #
-#if defined (PERLIN_IMPLEMENTATION)
+#if defined (NOISE_IMPLEMENTATION)
 # if !defined (_perlin_impl_h_)
 #  define _perlin_impl_h_ 1
 #
@@ -39,7 +41,9 @@ extern "C" {
 
 #  endif /* __cplusplus */
 
-static const uint8_t _perlin_perm[512] = {
+/* static constants */
+
+static const uint8_t _perm[512] = {
     151, 160, 137,  91,  90,  15, 131,  13, 201,  95,  96,  53, 194, 233,   7, 225,
     140,  36, 103,  30,  69, 142,   8,  99,  37, 240,  21,  10,  23, 190,   6, 148,
     247, 120, 234,  75,   0,  26, 197,  62,  94, 252, 219, 203, 117,  35,  11,  32,
@@ -74,23 +78,25 @@ static const uint8_t _perlin_perm[512] = {
     222, 114,  67,  29,  24,  72, 243, 141, 128, 195,  78,  66, 215,  61, 156, 180,
 };
 
-static inline double __perlin_floor(double a) {
+/* static API */
+
+static inline double __floor(double a) {
     return ((a < (int) a) ? (int) a - 1 :
                             (int) a);
 }
 
 
-static inline double __perlin_fade(double t) {
+static inline double __fade(double t) {
     return (t * t * t * (t * (t * 6.0 - 15.0) + 10.0));
 }
 
 
-static inline double __perlin_lerp(double t, double a, double b) {
+static inline double __lerp(double t, double a, double b) {
     return (a + t * (b - a));
 } 
 
 
-static inline double __perlin_grad(int hash, double x, double y, double z) {
+static inline double __grad(int hash, double x, double y, double z) {
     int h = hash & 0x0f;
     double u = h < 8 ? x : y,
            v = h < 4 ? y : h == 12 || h == 14 ? x : z;
@@ -103,9 +109,9 @@ static inline double __perlin(double x, double y, double z, int x_wrap, int y_wr
              y_mask = (y_wrap - 1) & 0xff,
              z_mask = (z_wrap - 1) & 0xff;
 
-    int32_t x_floor = __perlin_floor(x),
-            y_floor = __perlin_floor(y),
-            z_floor = __perlin_floor(z);
+    int32_t x_floor = __floor(x),
+            y_floor = __floor(y),
+            z_floor = __floor(z);
 
     int32_t X = x_floor & x_mask,
             Y = y_floor & y_mask,
@@ -115,30 +121,31 @@ static inline double __perlin(double x, double y, double z, int x_wrap, int y_wr
     y -= y_floor;
     z -= z_floor;
 
-    double u = __perlin_fade(x),
-           v = __perlin_fade(y),
-           w = __perlin_fade(z);
+    double u = __fade(x),
+           v = __fade(y),
+           w = __fade(z);
 
-    uint8_t A = _perlin_perm[X    ] + Y, AA = _perlin_perm[A] + Z, AB = _perlin_perm[A + 1] + Z,
-            B = _perlin_perm[X + 1] + Y, BA = _perlin_perm[B] + Z, BB = _perlin_perm[B + 1] + Z;
+    uint8_t A = _perm[X    ] + Y, AA = _perm[A] + Z, AB = _perm[A + 1] + Z,
+            B = _perm[X + 1] + Y, BA = _perm[B] + Z, BB = _perm[B + 1] + Z;
 
-    return (__perlin_lerp(w, __perlin_lerp(v, __perlin_lerp(u, __perlin_grad(_perlin_perm[AA    ], x      , y      , z      ),
-                                                               __perlin_grad(_perlin_perm[BA    ], x - 1.0, y      , z      )),
-                                              __perlin_lerp(u, __perlin_grad(_perlin_perm[AB    ], x      , y - 1.0, z      ),
-                                                               __perlin_grad(_perlin_perm[BB    ], x - 1.0, y - 1.0, z      ))),
-                             __perlin_lerp(v, __perlin_lerp(u, __perlin_grad(_perlin_perm[AA + 1], x      , y      , z - 1.0),
-                                                               __perlin_grad(_perlin_perm[BA + 1], x - 1.0, y      , z - 1.0)),
-                                              __perlin_lerp(u, __perlin_grad(_perlin_perm[AB + 1], x      , y - 1.0, z - 1.0),
-                                                               __perlin_grad(_perlin_perm[BB + 1], x - 1.0, y - 1.0, z - 1.0)))));
+    return (__lerp(w, __lerp(v, __lerp(u, __grad(_perm[AA    ], x      , y      , z      ),
+                                          __grad(_perm[BA    ], x - 1.0, y      , z      )),
+                                __lerp(u, __grad(_perm[AB    ], x      , y - 1.0, z      ),
+                                          __grad(_perm[BB    ], x - 1.0, y - 1.0, z      ))),
+                      __lerp(v, __lerp(u, __grad(_perm[AA + 1], x      , y      , z - 1.0),
+                                          __grad(_perm[BA + 1], x - 1.0, y      , z - 1.0)),
+                                __lerp(u, __grad(_perm[AB + 1], x      , y - 1.0, z - 1.0),
+                                          __grad(_perm[BB + 1], x - 1.0, y - 1.0, z - 1.0)))));
 }
 
+/* public API */
 
-double perlin2D(double x, double y) {
+double perlin2d(double x, double y) {
     return (__perlin(x, y, 0.0, 0, 0, 0));
 }
 
 
-double perlin2D_fbm(double x, double y, double lacunarity, double persistance, int octaves) {
+double fbm2d(double x, double y, double lacunarity, double persistance, int octaves) {
     double result = 0.0;
     double amplitude = 0.5,
            frequency = 1.0;
@@ -154,12 +161,12 @@ double perlin2D_fbm(double x, double y, double lacunarity, double persistance, i
 }
 
 
-double perlin3D(double x, double y, double z) {
+double perlin3d(double x, double y, double z) {
     return (__perlin(x, y, z, 0, 0, 0));
 }
 
 
-double perlin3D_fbm(double x, double y, double z, double lacunarity, double persistance, int octaves) {
+double fbm3d(double x, double y, double z, double lacunarity, double persistance, int octaves) {
     double result = 0.0;
     double amplitude = 0.5,
            frequency = 1.0;
@@ -181,5 +188,5 @@ double perlin3D_fbm(double x, double y, double z, double lacunarity, double pers
 
 #  endif /* __cplusplus */
 #
-# endif /* PERLIN_IMPLEMENTATION */
+# endif /* NOISE_IMPLEMENTATION */
 #endif /* _perlin_impl_h_ */
