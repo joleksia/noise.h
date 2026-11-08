@@ -115,9 +115,9 @@ static inline double __p_int(double x, double y, double z, int x_wrap, int y_wra
             yf = __p_floor(y),
             zf = __p_floor(z);
 
-    int32_t x0 = xf & xm, x1 = xf + 1 & xm,
-            y0 = yf & ym, y1 = yf + 1 & ym,
-            z0 = zf & zm, z1 = zf + 1 & zm;
+    int32_t x0 = xf & xm, x1 = (xf + 1) & xm,
+            y0 = yf & ym, y1 = (yf + 1) & ym,
+            z0 = zf & zm, z1 = (zf + 1) & zm;
 
     int32_t p0 = _p_perm[_p_perm[x0] + seed],
             p1 = _p_perm[_p_perm[x1] + seed];
